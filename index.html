@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Information Chatbot</title>
+    <style>
+        /* Color Scheme */
+        :root {
+            --primary-blue: #007BFF;
+            --white: #FFFFFF;
+            --primary-green: #28A745;
+            --light-grey: #F0F2F5;
+            --teal: #20C997;
+            --soft-yellow: #FFD700;
+            --dark-grey: #343A40;
+            --red: #DC3545;
+        }
+
+        /* General Styles */
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--white);
+            color: var(--dark-grey);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--light-grey);
+            border-radius: 8px;
+        }
+
+        button {
+            background-color: var(--primary-blue);
+            color: var(--white);
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3; /* Darker blue on hover */
+        }
+
+        select {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-right: 10px;
+            appearance: none;  /* Remove default arrow */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='6' fill='%23343a40'%3E%3Cpath d='M0 0l6 6 6-6z'/%3E%3C/svg%3E"); /* Custom arrow */
+            background-repeat: no-repeat;
+            background-position: right 8px top 50%;
+            background-size: 8px;
+        }
+
+        .container p {
+        font-size: 16px;
+        line-height: 1.5;
+        margin-bottom: 15px;
+      }
+
+        /* Specific Section Styles */
+        #location-section,
+        #convenience-section,
+        #hospital-search-section,
+        #results-section,
+        #hospital-details-section,
+        #hospital-detail-search{
+            margin-top: 20px;
+            padding: 15px;
+            background-color: var(--white);
+            border-radius: 5px;
+        }
+
+        .category-button {
+            background-color: var(--primary-blue);
+            color: var(--white);
+            padding: 8px 12px;
+            border-radius: 5px;
+            margin: 5px;
+            display: inline-block;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .category-button:hover {
+            background-color: #0056b3;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Text styles */
+        h1 {
+          color: var(--primary-blue);
+          text-align: center;
+        }
+
+        #error-message {
+            color: var(--red);
+        }
+        #error-message.show{
+            display:block;
+        }
+
+        /* Location section adjustments */
+        #location-section p {
+            margin-bottom: 10px;
+        }
+
+        #location-section select {
+            width: 150px;
+            margin-right: 10px;
+        }
+
+        #location-section button {
+            padding: 8px 12px;
+        }
+
+        /* Style the hospital name suggestions list */
+        #hospital-suggestions {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: var(--white);
+            position: absolute;
+            width: calc(100% - 2px); /* Adjust width to account for border */
+            z-index: 1;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        #hospital-suggestions li {
+            padding: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #hospital-suggestions li:hover {
+            background-color: var(--light-grey);
+        }
+
+        /* Style the search input */
+        #hospital-search-input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: calc(100% - 18px); /* Adjust width for padding and border */
+            margin-bottom: 10px;
+            box-sizing: border-box; /* Include padding and border in the element's total width and height */
+        }
+
+        .checkbox-group {
+            margin-bottom: 10px;
+        }
+
+        .checkbox-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        /* Style the hospital-detail-section buttons */
+        #show-hospital-search-btn {
+            margin-top: 10px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Hospital Information Chatbot</h1>
+
+        <!-- Initial Chatbot Start -->
+        <div id="chatbot-start-section">
+            <button id="start-chatbot">Start Chatbot</button>
+        </div>
+
+        <!-- Location Selection -->
+        <div id="location-section" class="hidden">
+            <p>To provide accurate information, please tell us your location:</p>
+            <select id="state-select">
+                <option value="">Select State</option>
+                <!-- Add states dynamically using JavaScript -->
+            </select>
+            <select id="city-select" disabled>
+                <option value="">Select City</option>
+                <!-- Add cities dynamically using JavaScript -->
+            </select>
+            <button id="continue-location">Continue</button>
+            <p id="error-message" class="hidden">Please select a state and city.</p>
+        </div>
+
+        <!-- Convenience vs. Hospital Search -->
+        <div id="convenience-section" class="hidden">
+            <p>What are you looking for?</p>
+            <button id="find-convenience">Find Convenience Features</button>
+            <button id="search-hospital">Search by Hospital</button>
+        </div>
+
+        <!-- Convenience Feature Search -->
+        <div id="convenience-feature-section" class="hidden">
+            <h3>Select Convenience Features</h3>
+            <!-- Add Category Buttons Dynamically using JavaScript -->
+            <div id="category-buttons"></div>
+            <button id="find-hospitals-by-convenience" class="hidden">Find Hospitals</button>
+        </div>
+
+        <!-- Hospital Search -->
+        <div id="hospital-search-section" class="hidden">
+            <h3>Search for a Specific Hospital</h3>
+            <input type="text" id="hospital-search-input" placeholder="Enter Hospital Name">
+            <ul id="hospital-suggestions"></ul> <!-- List of Suggestions -->
+            <button id="show-hospital-search-btn">Show Hospital Detail</button>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results-section" class="hidden">
+            <h3>Results</h3>
+            <ul id="hospital-list"></ul>
+        </div>
+
+         <!-- Hospital detail page before filtering details and features -->
+         <div id="hospital-detail-search" class="hidden">
+            <h3 id="hospital-name"></h3>
+            <h4>Filter a Feature</h4>
+            <div id="hospital-detail-categories"></div>
+        </div>
+
+        <!-- Hospital Details Section -->
+        <div id="hospital-details-section" class="hidden">
+            <h3 id="hospital-details-name">Hospital Name</h3>
+            <p id="hospital-details-info"></p> <!-- Further Information Here -->
+        </div>
+
+    </div>
+
+    <script>
+      // Sample Hospital Data with Indian names
+      const hospitalData = {
+          "Maharashtra": {
+              "Mumbai": [
+                  {
+                      name: "Lilavati Hospital",
+                      convenience: {
+                          "Essential Information & Navigation": {
+                              "HCO phone number to call and enquire": "022-12345678",
+                              "Scope of services (list of services available)": ["Cardiology", "Oncology", "Emergency"],
+                              "Lift availability": true
+                          },
+                          "Operational Services & Facilities": {
+                              "Pharmacy": true,
+                              "Food Court available": true
+                          },
+                            "Access & Assistance": {
+                                "Telemedicine": true,
+                                "Multi language sign boards, translators available": false
+                            },
+                            "Patient Support & Feedback": {
+                                "Patient Complaint management": true
+                            },
+                            "Safety & Security": {
+                                "Safety features - Fire protection, Disaster management, electrical safety": true,
+                                "Security provisions": true
+                            },
+                            "Financial & Insurance Information": {
+                                "HCO covered under Ayushman Bharat Scheme, CGHS, ECHS etc or not?": true
+                            }
+                      }
+                  },
+                  {
+                      name: "Kokilaben Dhirubhai Ambani Hospital",
+                      convenience: {
+                          "Essential Information & Navigation": {
+                              "HCO phone number to call and enquire": "022-98765432",
+                              "Scope of services (list of services available)": ["Neurology", "Orthopedics", "Pediatrics"],
+                              "Lift availability": true
+                          },
+                          "Operational Services & Facilities": {
+                              "Pharmacy": true,
+                              "Food Court available": false
+                          },
+                            "Access & Assistance": {
+                                "Telemedicine": false,
+                                "Multi language sign boards, translators available": true
+                            },
+                            "Patient Support & Feedback": {
+                                "Patient Complaint management": false
+                            },
+                            "Safety & Security": {
+                                "Safety features - Fire protection, Disaster management, electrical safety": false,
+                                "Security provisions": true
+                            },
+                            "Financial & Insurance Information": {
+                                "HCO covered under Ayushman Bharat Scheme, CGHS, ECHS etc or not?": false
+                            }
+                      }
+                  }
+              ],
+              "Pune": [
+                  {
+                      name: "Ruby Hall Clinic",
+                      convenience: {
+                          "Essential Information & Navigation": {
+                              "HCO phone number to call and enquire": "020-11122233",
+                              "Scope of services (list of services available)": ["Surgery", "Internal Medicine", "Radiology"],
+                              "Lift availability": true
+                          },
+                          "Operational Services & Facilities": {
+                              "Pharmacy": true,
+                              "Food Court available": true
+                          },
+                            "Access & Assistance": {
+                                "Telemedicine": true,
+                                "Multi language sign boards, translators available": true
+                            },
+                            "Patient Support & Feedback": {
+                                "Patient Complaint management": true
+                            },
+                            "Safety & Security": {
+                                "Safety features - Fire protection, Disaster management, electrical safety": true,
+                                "Security provisions": true
+                            },
+                            "Financial & Insurance Information": {
+                                "HCO covered under Ayushman Bharat Scheme, CGHS, ECHS etc or not?": true
+                            }
+                      }
+                  }
+              ]
+          },
+          "Karnataka": {
+              "Bangalore": [
+                  {
+                      name: "Manipal Hospital",
+                      convenience: {
+                          "Essential Information & Navigation": {
+                              "HCO phone number to call and enquire": "080-44455566",
+                              "Scope of services (list of services available)": ["Cardiology", "Gastroenterology", "Endocrinology"],
+                              "Lift availability": true
+                          },
+                          "Operational Services & Facilities": {
+                              "Pharmacy": true,
+                              "Food Court available": true
+                          },
+                            "Access & Assistance": {
+                                "Telemedicine": true,
+                                "Multi language sign boards, translators available": false
+                            },
+                            "Patient Support & Feedback": {
+                                "Patient Complaint management": true
+                            },
+                            "Safety & Security": {
+                                "Safety features - Fire protection, Disaster management, electrical safety": true,
+                                "Security provisions": true
+                            },
+                            "Financial & Insurance Information": {
+                                "HCO covered under Ayushman Bharat Scheme, CGHS, ECHS etc or not?": true
+                            }
+                      }
+                  }
+              ]
+          }
+      };
+
+
+        // Convenience feature categories (from your table)
+        const convenienceCategories = [
+            "Essential Information & Navigation",
+            "Operational Services & Facilities",
+            "Access & Assistance",
+            "Patient Support & Feedback",
+            "Safety & Security",
+            "Financial & Insurance Information"
+        ];
+
+        // Get DOM elements
+        const startChatbotButton = document.getElementById("start-chatbot");
+        const locationSection = document.getElementById("location-section");
+        const stateSelect = document.getElementById("state-select");
+        const citySelect = document.getElementById("city-select");
+        const continueLocationButton = document.getElementById("continue-location");
+        const convenienceSection = document.getElementById("convenience-section");
+        const findConvenienceButton = document.getElementById("find-convenience");
+        const searchHospitalButton = document.getElementById("search-hospital");
+        const convenienceFeatureSection = document.getElementById("convenience-feature-section");
+        const hospitalSearchSection = document.getElementById("hospital-search-section");
+        const resultsSection = document.getElementById("results-section");
+        const hospitalDetailsSection = document.getElementById("hospital-details-section");
+        const errorMessage = document.getElementById("error-message");
+        const hospitalList = document.getElementById("hospital-list");
+        const hospitalSuggestionsList = document.getElementById("hospital-suggestions");
+        const hospitalSearchInput = document.getElementById("hospital-search-input");
+        const categoryButtonsContainer = document.getElementById("category-buttons");
+        const findHospitalsByConvenienceButton = document.getElementById("find-hospitals-by-convenience");
+        const showHospitalSearch = document.getElementById("show-hospital-search-btn");
+        const hospitalDetailSearch = document.getElementById("hospital-detail-search");
+        const hospitalNameHeader = document.getElementById("hospital-name");
+        const hospitalDetailCategories = document.getElementById("hospital-detail-categories");
+
+
+        let selectedState = "";
+        let selectedCity = "";
+        let selectedConvenienceFeatures = {};
+        let selectedHospital;
+
+
+        // Functions
+
+        function populateStates() {
+            for (const state in hospitalData) {
+                const option = document.createElement("option");
+                option.value = state;
+                option.textContent = state;
+                stateSelect.appendChild(option);
+            }
+        }
+
+        function populateCities(state) {
+            citySelect.innerHTML = '<option value="">Select City</option>';
+            if (hospitalData[state]) {  // **Important: Check if state exists**
+              for (const city of Object.keys(hospitalData[state])) { //Iterate through the key/property names of the object
+                  const option = document.createElement("option");
+                  option.value = city;
+                  option.textContent = city;
+                  citySelect.appendChild(option);
+              }
+              citySelect.disabled = false;
+            } else {
+              citySelect.disabled = true;  // Disable if no cities exist for that state
+            }
+        }
+
+        function displayHospitals(hospitals) {
+            hospitalList.innerHTML = ""; // Clear previous results
+
+            if (hospitals.length === 0) {
+                const listItem = document.createElement("li");
+                listItem.textContent = "No hospitals found matching your criteria.";
+                hospitalList.appendChild(listItem);
+                return;
+            }
+
+            hospitals.forEach(hospital => {
+                const listItem = document.createElement("li");
+                listItem.textContent = hospital.name;
+
+                listItem.addEventListener("click", () => {
+                    showHospitalDetails(hospital);
+                });
+
+                hospitalList.appendChild(listItem);
+            });
+        }
+
+        function showHospitalDetails(hospital) {
+            //For Demo Purposes We just Display the name for Now, we will get more details later
+            document.getElementById("hospital-details-name").innerHTML = hospital.name;
+            document.getElementById("hospital-details-info").innerHTML = JSON.stringify(hospital);
+            hideAllSections();
+            hospitalDetailsSection.classList.remove("hidden");
+
+        }
+
+        //Function for getting a specified hospital detail.
+        function searchForHospitalDetail() {
+            // Ensure a hospital name is selected
+            if (!selectedHospital) {
+                alert("Please select a hospital from the list.");
+                return;
+            }
+
+            // Show new container
+            hideAllSections();
+            hospitalDetailSearch.classList.remove("hidden");
+            displayHospital(selectedHospital);
+            createHospitalDetailCategories()
+
+        }
+
+        function displayHospital(hospital) {
+            document.getElementById("hospital-name").innerHTML = hospital.name;
+        }
+
+
+        function hideAllSections() {
+            const sections = document.querySelectorAll(".container > div");  // Select direct children only
+            sections.forEach(section => section.classList.add("hidden"));
+        }
+
+        function isValidLocation() {
+            return stateSelect.value !== "" && citySelect.value !== "";
+        }
+
+        function findHospitalsByFeatures() {
+            const selectedHospitals = [];
+            const selectedState = stateSelect.value;
+            const selectedCity = citySelect.value;
+            const features = selectedConvenienceFeatures;
+
+            if (hospitalData[selectedState] && hospitalData[selectedState][selectedCity]) {
+                const selectedCityData = hospitalData[selectedState][selectedCity]; // Access the array of hospitals
+
+                selectedCityData.forEach(hospital => {
+                    let matchesAllFeatures = true;
+                    for (const category in features) {
+                        if (features[category].length > 0) {
+                            //If we selected atleast one feature in the category
+                            for (const feature of features[category]) {
+                                if (!hospital.convenience[category] || !hospital.convenience[category][feature]) {
+                                    matchesAllFeatures = false;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!matchesAllFeatures) break; //No point to iterate if this failed
+                    }
+
+                    if (matchesAllFeatures) {
+                        selectedHospitals.push(hospital);
+                    }
+                });
+            }
+            return selectedHospitals;
+        }
+
+       // Function to create category buttons
+        function createCategoryButtons() {
+            categoryButtonsContainer.innerHTML = "";
+            convenienceCategories.forEach(category => {
+                const button = document.createElement("button");
+                button.classList.add("category-button");
+                button.textContent = category;
+                button.dataset.category = category; // Store category name
+                button.addEventListener("click", () => toggleConvenienceFeatureList(category));
+                categoryButtonsContainer.appendChild(button);
+            });
+        }
+
+                // Function to create category buttons
+        function createHospitalDetailCategories() {
+            hospitalDetailCategories.innerHTML = "";
+            convenienceCategories.forEach(category => {
+                const button = document.createElement("button");
+                button.classList.add("category-button");
+                button.textContent = category;
+                button.dataset.category = category; // Store category name
+                button.addEventListener("click", () => toggleHospitalDetailList(category));
+                hospitalDetailCategories.appendChild(button);
+            });
+        }
+
+
+        function toggleConvenienceFeatureList(category) {
+            // Check if the list already exists
+            let featureList = document.getElementById(category + "-list");
+
+            if (featureList) {
+                featureList.remove(); // Remove existing list
+            } else {
+                // Create and display the list if it doesn't exist
+                featureList = document.createElement("div");
+                featureList.id = category + "-list";
+                featureList.style.marginTop = "10px";
+
+                // Use example list as it would be data from a databse.
+                // Get the first hospital's convenience data for the selected category
+
+                let features = [];
+
+                for (const state in hospitalData) {
+                    for (const city in hospitalData[state]) {
+                        const hospitals = hospitalData[state][city];
+                        if (hospitals && hospitals.length > 0 && hospitals[0].convenience[category]) {
+                            features = Object.keys(hospitals[0].convenience[category]);
+                            break; // Stop after finding the first valid category
+                        }
+                    }
+                    if (features.length > 0) break;
+                }
+
+                if (!features) {
+                    console.error(`No convenience data found for category: ${category}`);
+                    return;
+                }
+
+                features.forEach(feature => {
+                    const label = document.createElement("label");
+                    label.style.display = "block";
+
+                    const checkbox = document.createElement("input");
+                    checkbox.type = "checkbox";
+                    checkbox.value = feature;
+                    checkbox.name = category;
+
+                    // Event listener to update selected features
+                    checkbox.addEventListener("change", function() {
+                        if (!selectedConvenienceFeatures[category]) {
+                            selectedConvenienceFeatures[category] = [];
+                        }
+
+                        if (this.checked) {
+                            selectedConvenienceFeatures[category].push(feature);
+                        } else {
+                            const index = selectedConvenienceFeatures[category].indexOf(feature);
+                            if (index > -1) {
+                                selectedConvenienceFeatures[category].splice(index, 1);
+                            }
+                        }
+
+                       // Show the Find Hospitals Button
+                        if (Object.keys(selectedConvenienceFeatures).length > 0) {
+                            findHospitalsByConvenienceButton.classList.remove("hidden");
+                        } else {
+                            findHospitalsByConvenienceButton.classList.add("hidden");
+                        }
+                    });
+
+                    label.appendChild(checkbox);
+                    label.appendChild(document.createTextNode(feature));
+                    featureList.appendChild(label);
+                });
+
+                // Insert the feature list after the button
+                const categoryButton = document.querySelector(`[data-category="${category}"]`);
+                categoryButton.parentNode.insertBefore(featureList, categoryButton.nextSibling);
+            }
+        }
+
+         function toggleHospitalDetailList(category) {
+            // Check if the list already exists
+            let featureList = document.getElementById(category + "-list");
+
+            if (featureList) {
+                featureList.remove(); // Remove existing list
+            } else {
+                // Create and display the list if it doesn't exist
+                featureList = document.createElement("div");
+                featureList.id = category + "-list";
+                featureList.style.marginTop = "10px";
+
+                // Get the features for the selected hospital in that category
+                if (!selectedHospital || !selectedHospital.convenience || !selectedHospital.convenience[category]) {
+                    featureList.textContent = "No features available for this hospital in this category.";
+                    hospitalDetailCategories.appendChild(featureList);
+                    return;
+                }
+
+                const features = Object.keys(selectedHospital.convenience[category]);
+
+                features.forEach(feature => {
+                  const listItem = document.createElement("li");
+                  listItem.textContent = `${feature}: ${selectedHospital.convenience[category][feature] ? 'Yes' : 'No'}`;
+                  featureList.appendChild(listItem);
+              });
+
+                // Insert the feature list after the button
+                const categoryButton = document.querySelector(`[data-category="${category}"]`);
+                categoryButton.parentNode.insertBefore(featureList, categoryButton.nextSibling);
+            }
+        }
+
+        // Event Listeners
+
+        startChatbotButton.addEventListener("click", () => {
+            hideAllSections();
+            locationSection.classList.remove("hidden");
+        });
+
+        stateSelect.addEventListener("change", () => {
+            selectedState = stateSelect.value;
+            populateCities(selectedState);
+        });
+
+        citySelect.addEventListener("change", () => {
+            selectedCity = citySelect.value;
+        });
+
+        continueLocationButton.addEventListener("click", () => {
+            if (isValidLocation()) {
+                hideAllSections();
+                convenienceSection.classList.remove("hidden");
+                errorMessage.classList.add("hidden");
+            } else {
+                errorMessage.classList.add("hidden");
+                errorMessage.classList.add("show");
+            }
+        });
+
+        findConvenienceButton.addEventListener("click", () => {
+            hideAllSections();
+            convenienceFeatureSection.classList.remove("hidden");
+            createCategoryButtons();
+
+        });
+
+        searchHospitalButton.addEventListener("click", () => {
+            hideAllSections();
+            hospitalSearchSection.classList.remove("hidden");
+        });
+
+        findHospitalsByConvenienceButton.addEventListener("click", () => {
+            const hospitals = findHospitalsByFeatures();
+            hideAllSections();
+            resultsSection.classList.remove("hidden");
+            displayHospitals(hospitals);
+        });
+
+        hospitalSearchInput.addEventListener("input", () => {
+           const searchText = hospitalSearchInput.value.toLowerCase();
+           hospitalSuggestionsList.innerHTML = ""; // Clear previous suggestions
+           selectedHospital = null; // Clear the selection
+
+           // Replace it with API Call so we don't have to call all the hospital data on the page
+
+           // Example only, not perfect
+           if (searchText.length > 0) {
+               // Loop through states and cities
+               for (const state in hospitalData) {
+                   for (const city in hospitalData[state]) {
+                       // Loop through hospitals in each city
+                       hospitalData[state][city].forEach(hospital => {
+                           if (hospital.name.toLowerCase().includes(searchText)) {
+                               const listItem = document.createElement("li");
+                               listItem.textContent = hospital.name;
+                               listItem.addEventListener("click", () => {
+                                   hospitalSearchInput.value = hospital.name;
+                                   hospitalSuggestionsList.innerHTML = "";
+                                   selectedHospital = hospital;  // Now we save the hospital
+                               });
+                               hospitalSuggestionsList.appendChild(listItem);
+                           }
+                       });
+                   }
+               }
+           }
+       });
+
+        //Event to search for a hospital
+
+        showHospitalSearch.addEventListener("click", () => {
+            searchForHospitalDetail()
+        });
+
+        // Initialization
+        populateStates();
+
+    </script>
+
+</body>
+</html>
